@@ -1,0 +1,13 @@
+<taglib>
+	<version>1.0</version>
+	<jsp-version>2.0</jsp-version>
+	
+	<tag>
+		<name>roleAccess</name>
+		<tag-class>sample.tag.RoleAccessTag</tag-class>
+		<attribute>
+			<name>roleRequired</name>
+			<required>true</required>
+		</attribute>	
+	</tag>
+</taglib>

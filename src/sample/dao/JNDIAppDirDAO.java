@@ -81,35 +81,43 @@ public class JNDIAppDirDAO implements IAppDirDAO {
 			
 			Connection conn = ds.getConnection();
 			
-			PreparedStatement pr = conn.prepareStatement("select comid from companyuserjunction where userid=?");
-			pr.setInt(1, com.getUser().getId());
+			PreparedStatement pr = null; 
 			
-			ResultSet rs = pr.executeQuery();
-			
-			if(rs.next()){
+			if(com.getId() != 0){
 				// Company exists, update it
-				com.setId(rs.getInt("comid"));
-				pr.close();
-				rs.close();
-				
+								
 				pr = conn.prepareStatement("update company set name=?, city=?, statecode=? where comid=?");
 				pr.setString(1, com.getName());
 				pr.setString(2, com.getCity());
 				pr.setString(3, new String(com.getStateCode()));
 				pr.setInt(4, com.getId());
 				
-				pr.executeQuery();
+				pr.executeUpdate();
+				pr.close();
+				
+				pr = conn.prepareStatement("update contact set fullname=?, phonenum=?, email=? where contactid=?");
+				pr.setString(1, com.getContact().getName());
+				pr.setString(2, com.getContact().getPhone());
+				pr.setString(3, com.getContact().getEmail());
+				pr.setInt(4, com.getContact().getId());
+				
+				pr.executeUpdate();
+				pr.close();
+				conn.commit();
+				
 				return;
 			}
 			// else
 			// Company doesn't exist, create it
+			
+			ResultSet rs = null;
 			
 			pr = conn.prepareStatement("insert into company(name, city, statecode) values (?,?,?)");
 			pr.setString(1, com.getName());
 			pr.setString(2, com.getCity());
 			pr.setString(3, new String(com.getStateCode()));
 			
-			pr.executeQuery();
+			pr.executeUpdate();
 			
 			// Assume company names are unique
 			pr = conn.prepareStatement("Select comid from company where name=?");
@@ -119,11 +127,32 @@ public class JNDIAppDirDAO implements IAppDirDAO {
 			rs.next();
 			com.setId(rs.getInt("comid"));
 			
+			rs.close();
+			
 			pr = conn.prepareStatement("insert into companyuserjunction(comid, userid) values (?,?)");
 			pr.setInt(1, com.getId());
 			pr.setInt(2, com.getUser().getId());
 			
-			pr.executeQuery();
+			pr.executeUpdate();
+			
+			pr = conn.prepareStatement("insert into contact(fullname, phonenum, email, comid) values (?, ?, ?, ?)");
+			pr.setString(1, com.getContact().getName());
+			pr.setString(2, com.getContact().getPhone());
+			pr.setString(3, com.getContact().getEmail());
+			pr.setInt(4, com.getId());
+			
+			pr.executeUpdate();
+			
+			conn.commit();
+			
+			pr = conn.prepareStatement("select contactid from contact where comid = ?");
+			pr.setInt(1, com.getId());
+			
+			rs = pr.executeQuery();
+			rs.next();
+			
+			com.getContact().setId(rs.getInt(1));
+			
 		}
 		catch (SQLException s) {
 			throw new DBAccessException(s.getMessage());
@@ -327,16 +356,21 @@ public class JNDIAppDirDAO implements IAppDirDAO {
 			DataSource ds = (DataSource) cont.lookup("jdbc/applier");
 			
 			Connection conn = ds.getConnection();
-			PreparedStatement ps = conn.prepareStatement("select c.comid, name, city, statecode"
-					                                  + " from company c, companyuserjunction cuj"
-					                                  + " where cuj.USERID = ? and cuj.COMID = c.COMID");
+			PreparedStatement ps = conn.prepareStatement("select c.comid, c.name, c.city, c.statecode, co.CONTACTID, co.FULLNAME, co.PHONENUM, co.EMAIL"
+					                                  + " from company c left join companyuserjunction cuj on c.COMID = cuj.COMID left join contact co on c.COMID = co.COMID"
+					                                  + " where cuj.USERID = ?");
 			
 			ps.setInt(1, user.getId());
 			
 			ResultSet rs = ps.executeQuery();
 			Company com = null;
-			if(rs.next())
-				com = new Company(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4).toCharArray(), null);
+			if(rs.next()){
+				Contact con = null;
+				String name = rs.getString(6); // Verify we have a contact and add them.
+				if(name != null)
+					con = new Contact(rs.getInt(5), name, rs.getString(7), rs.getString(8));
+				com = new Company(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4).toCharArray(), con);
+			}
 			
 			user.setCompany(com);
 			

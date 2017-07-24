@@ -1,25 +1,27 @@
 package sample.model;
 
-import java.util.List;
-
 public class Company {
 	private int id;
 	private String name;
 	private String city;
 	private char[] stateCode;
 	private UserCredentials user;
-	private List<Contact> contacts;
+	private Contact contact;
 	
-	public Company(int id, String name, String city, char[] stateCode, List<Contact> contacts){
+	public Company(int id, String name, String city, char[] stateCode, Contact contact){
 		this.id = id;
 		this.name = name;
 		this.city = city;
 		this.stateCode = stateCode;
-		this.contacts = contacts;
+		this.contact = contact;
 	}
 
 	public int getId() {
 		return id;
+	}
+
+	public Contact getContact() {
+		return contact;
 	}
 
 	public void setId(int id) {
@@ -38,9 +40,6 @@ public class Company {
 		return stateCode;
 	}
 
-	public List<Contact> getContacts() {
-		return contacts;
-	}
 
 	public UserCredentials getUser() {
 		return user;

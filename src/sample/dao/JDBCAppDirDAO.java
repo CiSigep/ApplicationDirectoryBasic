@@ -10,8 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.naming.NamingException;
-
 import sample.exceptions.DBAccessException;
 import sample.model.Company;
 import sample.model.Contact;
@@ -70,7 +68,83 @@ public class JDBCAppDirDAO implements IAppDirDAO {
 
 	@Override
 	public void addCompany(Company com) throws DBAccessException {
-		// TODO Auto-generated method stub
+		try {
+			Connection conn = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:xe", "applier", "applier");
+			PreparedStatement pr = null;
+			
+			if(com.getId() != 0){
+				// Company exists, update it
+								
+				pr = conn.prepareStatement("update company set name=?, city=?, statecode=? where comid=?");
+				pr.setString(1, com.getName());
+				pr.setString(2, com.getCity());
+				pr.setString(3, new String(com.getStateCode()));
+				pr.setInt(4, com.getId());
+				
+				pr.executeUpdate();
+				pr.close();
+				
+				pr = conn.prepareStatement("update contact set fullname=?, phonenum=?, email=? where contactid=?");
+				pr.setString(1, com.getContact().getName());
+				pr.setString(2, com.getContact().getPhone());
+				pr.setString(3, com.getContact().getEmail());
+				pr.setInt(4, com.getContact().getId());
+				
+				pr.executeUpdate();
+				pr.close();
+				conn.commit();
+				
+				return;
+			}
+			// else
+			// Company doesn't exist, create it
+			
+			ResultSet rs = null;
+			
+			pr = conn.prepareStatement("insert into company(name, city, statecode) values (?,?,?)");
+			pr.setString(1, com.getName());
+			pr.setString(2, com.getCity());
+			pr.setString(3, new String(com.getStateCode()));
+			
+			pr.executeUpdate();
+			
+			// Assume company names are unique
+			pr = conn.prepareStatement("Select comid from company where name=?");
+			pr.setString(1, com.getName());
+			rs = pr.executeQuery();
+			
+			rs.next();
+			com.setId(rs.getInt("comid"));
+			
+			rs.close();
+			
+			pr = conn.prepareStatement("insert into companyuserjunction(comid, userid) values (?,?)");
+			pr.setInt(1, com.getId());
+			pr.setInt(2, com.getUser().getId());
+			
+			pr.executeUpdate();
+			
+			pr = conn.prepareStatement("insert into contact(fullname, phonenum, email, comid) values (?, ?, ?, ?)");
+			pr.setString(1, com.getContact().getName());
+			pr.setString(2, com.getContact().getPhone());
+			pr.setString(3, com.getContact().getEmail());
+			pr.setInt(4, com.getId());
+			
+			pr.executeUpdate();
+			
+			conn.commit();
+			
+			pr = conn.prepareStatement("select contactid from contact where comid = ?");
+			pr.setInt(1, com.getId());
+			
+			rs = pr.executeQuery();
+			rs.next();
+			
+			com.getContact().setId(rs.getInt(1));
+		}
+		catch (SQLException s) {
+			throw new DBAccessException(s.getMessage());
+			}
 
 	}
 
@@ -244,9 +318,9 @@ public class JDBCAppDirDAO implements IAppDirDAO {
 		
 		try{
 			Connection conn = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:xe", "applier", "applier");
-			PreparedStatement ps = conn.prepareStatement("select c.comid, name, city, statecode"
-	                + " from company c, companyuserjunction cuj"
-	                + " where cuj.USERID = ? and cuj.COMID = c.COMID");
+			PreparedStatement ps = conn.prepareStatement("select c.comid, c.name, c.city, c.statecode, co.CONTACTID, co.FULLNAME, co.PHONENUM, co.EMAIL"
+                    + " from company c left join companyuserjunction cuj on c.COMID = cuj.COMID left join contact co on c.COMID = co.COMID"
+                    + " where cuj.USERID = ?");
 	
 			ps.setInt(1, user.getId());
 			

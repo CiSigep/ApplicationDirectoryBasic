@@ -1,6 +1,7 @@
 package sample.servlet;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -11,6 +12,7 @@ import sample.dao.IAppDirDAO;
 import sample.dao.JNDIAppDirDAO;
 import sample.exceptions.DBAccessException;
 import sample.model.Company;
+import sample.model.Contact;
 import sample.model.UserCredentials;
 
 public class CompanyServlet extends HttpServlet {
@@ -27,11 +29,18 @@ public class CompanyServlet extends HttpServlet {
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		int comid = Integer.parseInt(req.getParameter("comId"));
 		String name = req.getParameter("name");
 		String city = req.getParameter("city");
 		char[] stateCode = req.getParameter("state").toCharArray();
+		int contid = Integer.parseInt(req.getParameter("contId"));
+		String conName = req.getParameter("conName");
+		String conPhone = req.getParameter("conPhone");
+		String conMail = req.getParameter("conMail");
 		
-		Company com = new Company(0, name, city, stateCode, null);
+		Contact cont = new Contact(contid, conName, conPhone, conMail);
+		
+		Company com = new Company(comid, name, city, stateCode, cont);
 		com.setUser((UserCredentials) req.getSession().getAttribute("UserCred"));
 		
 		try {
@@ -40,7 +49,10 @@ public class CompanyServlet extends HttpServlet {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		PrintWriter pw = resp.getWriter();
 		
+		// Company and Contact objects' ids get updated, so they can be passed back
+		pw.write("{ \"com\": " +  com.getId() + ", \"cont\": " + com.getContact().getId() + " }");
 	}
 	
 	

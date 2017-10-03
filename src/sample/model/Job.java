@@ -6,13 +6,15 @@ import java.util.List;
 public class Job {
 	
 	private int id;
+	private int comId;
 	private String jobTitle;
 	private String experience;
 	private List<Skill> skills;
 	
-	public Job(int id, String jobTitle, String experience)
+	public Job(int id, int comId, String jobTitle, String experience)
 	{
 		this.id = id;
+		this.comId = comId;
 		this.jobTitle = jobTitle;
 		this.experience = experience;
 		skills = new ArrayList<Skill>();
@@ -36,6 +38,10 @@ public class Job {
 	
 	public void addSkill(Skill skill) {
 		skills.add(skill);
+	}
+
+	public int getComId() {
+		return comId;
 	}
 	
 

@@ -13,6 +13,7 @@ import java.util.Map;
 import sample.exceptions.DBAccessException;
 import sample.model.Company;
 import sample.model.Contact;
+import sample.model.Job;
 import sample.model.JobApplication;
 import sample.model.Skill;
 import sample.model.UserCredentials;
@@ -336,6 +337,24 @@ public class JDBCAppDirDAO implements IAppDirDAO {
 		catch (SQLException s) {
 			throw new DBAccessException(s.getMessage());
 		}
+	}
+
+	@Override
+	public void addJobForCompany(Job job, Company company) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public List<Job> getJobsForCompany(Company company) {
+		return null;
+		
+	}
+
+	@Override
+	public Job getJobById(int id) throws DBAccessException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 

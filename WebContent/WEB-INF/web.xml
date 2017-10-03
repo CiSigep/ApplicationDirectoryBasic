@@ -36,6 +36,12 @@
   	<load-on-startup>4</load-on-startup>
   </servlet>
   
+  <servlet>
+  	<servlet-name>ViewJobCompanyServlet</servlet-name>
+  	<servlet-class>sample.servlet.ViewJobCompanyServlet</servlet-class>
+  	<load-on-startup>5</load-on-startup>
+  </servlet>
+  
   <servlet-mapping>
   	<servlet-name>DefaultServlet</servlet-name>
   	<url-pattern>/start</url-pattern>
@@ -59,6 +65,11 @@
   <servlet-mapping>
   	<servlet-name>CompanyServlet</servlet-name>
   	<url-pattern>/company</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+  	<servlet-name>ViewJobCompanyServlet</servlet-name>
+  	<url-pattern>/companyJob</url-pattern>
   </servlet-mapping>
   
   <security-role>

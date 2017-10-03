@@ -16,6 +16,7 @@ import javax.naming.NamingException;
 import sample.exceptions.DBAccessException;
 import sample.model.Company;
 import sample.model.Contact;
+import sample.model.Job;
 import sample.model.JobApplication;
 import sample.model.Skill;
 import sample.model.UserCredentials;
@@ -382,6 +383,100 @@ public class JNDIAppDirDAO implements IAppDirDAO {
 			throw new DBAccessException(e.getMessage());
 		}
 		
+	}
+
+	@Override
+	public void addJobForCompany(Job job, Company company) throws DBAccessException {
+		try{
+			InitialContext cont = new InitialContext();
+			DataSource ds = (DataSource) cont.lookup("jdbc/applier");
+			
+			Connection conn = ds.getConnection();
+			
+			PreparedStatement ps = conn.prepareStatement("INSERT INTO appjob(comid, jobtitle, experience) VALUES (?, ?, ?)");
+			ps.setInt(1, company.getId());
+			ps.setString(2, job.getJobTitle());
+			ps.setString(3, job.getExperience());
+			
+			ps.execute();
+			
+			ps = conn.prepareStatement("INSERT INTO skillsjunction(skillid, jobid) VALUES (?, ?)");
+			for(Skill s : job.getSkills()){
+				ps.setInt(1, s.getId());
+				ps.setInt(2, job.getId());
+				ps.addBatch();
+			}
+			ps.executeBatch();
+			
+			
+		}
+		catch (SQLException s) {
+			throw new DBAccessException(s.getMessage());
+		} catch (NamingException e) {
+			throw new DBAccessException(e.getMessage());
+		}
+		
+		
+		
+	}
+
+	@Override
+	public List<Job> getJobsForCompany(Company company) throws DBAccessException {
+		List<Job> jobs = new ArrayList<Job>();
+		try{
+			InitialContext cont = new InitialContext();
+			DataSource ds = (DataSource) cont.lookup("jdbc/applier");
+			
+			Connection conn = ds.getConnection();
+			
+			PreparedStatement ps = conn.prepareStatement("SELECT * from appjob where comid = ?");
+			ps.setInt(1, company.getId());
+			
+			ResultSet rs = ps.executeQuery();
+			while(rs.next()){
+				jobs.add(new Job(rs.getInt("jobid"), company.getId(), rs.getString("jobtitle"), rs.getString("experience")));
+			}
+			
+			rs.close();
+			
+		}
+		catch (SQLException s) {
+			throw new DBAccessException(s.getMessage());
+		} catch (NamingException e) {
+			throw new DBAccessException(e.getMessage());
+		}
+		
+		return jobs;
+		
+	}
+
+	@Override
+	public Job getJobById(int id) throws DBAccessException {
+		Job job = null;
+		try{
+			InitialContext cont = new InitialContext();
+			DataSource ds = (DataSource) cont.lookup("jdbc/applier");
+			
+			Connection conn = ds.getConnection();
+			
+			PreparedStatement ps = conn.prepareStatement("Select * from appjob where jobid = ?");
+			
+			ps.setInt(1, id);
+			
+			ResultSet rs = ps.executeQuery();
+			
+			if(rs.next())
+				job = new Job(rs.getInt("jobid"), rs.getInt("comid"), rs.getString("jobtitle"), rs.getString("experience"));
+			
+			
+		}
+		catch (SQLException s) {
+			throw new DBAccessException(s.getMessage());
+		} catch (NamingException e) {
+			throw new DBAccessException(e.getMessage());
+		}
+		
+		return job;
 	}
 
 }

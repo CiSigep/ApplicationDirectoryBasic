@@ -5,6 +5,7 @@ import java.util.List;
 import sample.exceptions.DBAccessException;
 import sample.model.Company;
 import sample.model.Contact;
+import sample.model.Job;
 import sample.model.JobApplication;
 import sample.model.Skill;
 import sample.model.UserCredentials;
@@ -39,5 +40,11 @@ public interface IAppDirDAO {
 	public void removeRolesFromUser(String username, List<String> roles) throws DBAccessException;
 	
 	public void getCompanyForUser(UserCredentials user) throws DBAccessException;
+	
+	public void addJobForCompany(Job job, Company company) throws DBAccessException;
+	
+	public List<Job> getJobsForCompany(Company company) throws DBAccessException;
+	
+	public Job getJobById(int id) throws DBAccessException;
 
 }

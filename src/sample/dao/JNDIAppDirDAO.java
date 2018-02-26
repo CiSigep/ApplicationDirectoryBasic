@@ -28,10 +28,7 @@ public class JNDIAppDirDAO implements IAppDirDAO {
 	public UserCredentials getUserInfo(UserCredentials user) throws DBAccessException {
 		UserCredentials userInfo = null;
 		try{
-			InitialContext cont = new InitialContext();
-			DataSource ds = (DataSource) cont.lookup("jdbc/applier");
-			
-			Connection conn = ds.getConnection();
+			Connection conn = getConnection();
 			PreparedStatement ps = conn.prepareStatement("SELECT userid, username, urid, rolename"
 					+ " FROM appusers, rolejunction, userrole"
 					+ " WHERE username=? and userid = rolejunction.rjuserid and rolejunction.rjroleid = urid");
@@ -77,10 +74,7 @@ public class JNDIAppDirDAO implements IAppDirDAO {
 	@Override
 	public void addCompany(Company com) throws DBAccessException {
 		try {
-			InitialContext cont = new InitialContext();
-			DataSource ds = (DataSource) cont.lookup("jdbc/applier");
-			
-			Connection conn = ds.getConnection();
+			Connection conn = getConnection();
 			
 			PreparedStatement pr = null; 
 			
@@ -192,10 +186,7 @@ public class JNDIAppDirDAO implements IAppDirDAO {
 		Map<Integer, UserCredentials> userMap = new HashMap<Integer, UserCredentials>();
 		List<UserCredentials> users = new ArrayList<UserCredentials>();
 		try {
-			InitialContext cont = new InitialContext();
-			DataSource ds = (DataSource) cont.lookup("jdbc/applier");
-			
-			Connection conn = ds.getConnection();
+			Connection conn = getConnection();
 			
 			PreparedStatement pre = conn.prepareStatement("Select * from appusers order by userid");
 			
@@ -239,10 +230,7 @@ public class JNDIAppDirDAO implements IAppDirDAO {
 	public List<UserRole> getRoles() throws DBAccessException {
 		List<UserRole> roles = new ArrayList<UserRole>();
 		try {
-			InitialContext cont = new InitialContext();
-			DataSource ds = (DataSource) cont.lookup("jdbc/applier");
-			
-			Connection conn = ds.getConnection();
+			Connection conn = getConnection();
 			PreparedStatement pre = conn.prepareStatement("Select * from userrole");
 			ResultSet rs = pre.executeQuery();
 			
@@ -263,10 +251,7 @@ public class JNDIAppDirDAO implements IAppDirDAO {
 	@Override
 	public void addRolesToUser(String username, List<String> roles) throws DBAccessException {
 		try{
-			InitialContext cont = new InitialContext();
-			DataSource ds = (DataSource) cont.lookup("jdbc/applier");
-			
-			Connection conn = ds.getConnection();
+			Connection conn = getConnection();
 			StringBuffer buf = new StringBuffer("insert into rolejunction (RJUSERID, RJROLEID)"
 					+ " select userid, urid from appusers cross join USERROLE where username = ? and (rolename in(");
 			
@@ -308,10 +293,7 @@ public class JNDIAppDirDAO implements IAppDirDAO {
 	@Override
 	public void removeRolesFromUser(String username, List<String> roles) throws DBAccessException {
 		try{
-			InitialContext cont = new InitialContext();
-			DataSource ds = (DataSource) cont.lookup("jdbc/applier");
-			
-			Connection conn = ds.getConnection();
+			Connection conn = getConnection();
 			StringBuffer buf = new StringBuffer("delete from rolejunction"
 					+ " where RJUSERID in (select userid from appusers where username=?)"
 					+ " and RJROLEID in (select urid from userrole where rolename in (");
@@ -353,10 +335,7 @@ public class JNDIAppDirDAO implements IAppDirDAO {
 	@Override
 	public void getCompanyForUser(UserCredentials user) throws DBAccessException {
 		try{
-			InitialContext cont = new InitialContext();
-			DataSource ds = (DataSource) cont.lookup("jdbc/applier");
-			
-			Connection conn = ds.getConnection();
+			Connection conn = getConnection();
 			PreparedStatement ps = conn.prepareStatement("select c.comid, c.name, c.city, c.statecode, co.CONTACTID, co.FULLNAME, co.PHONENUM, co.EMAIL"
 					                                  + " from company c left join companyuserjunction cuj on c.COMID = cuj.COMID left join contact co on c.COMID = co.COMID"
 					                                  + " where cuj.USERID = ?");
@@ -388,10 +367,7 @@ public class JNDIAppDirDAO implements IAppDirDAO {
 	@Override
 	public void addJobForCompany(Job job, Company company) throws DBAccessException {
 		try{
-			InitialContext cont = new InitialContext();
-			DataSource ds = (DataSource) cont.lookup("jdbc/applier");
-			
-			Connection conn = ds.getConnection();
+			Connection conn = getConnection();
 			
 			PreparedStatement ps = conn.prepareStatement("INSERT INTO appjob(comid, jobtitle, experience) VALUES (?, ?, ?)");
 			ps.setInt(1, company.getId());
@@ -424,10 +400,7 @@ public class JNDIAppDirDAO implements IAppDirDAO {
 	public List<Job> getJobsForCompany(Company company) throws DBAccessException {
 		List<Job> jobs = new ArrayList<Job>();
 		try{
-			InitialContext cont = new InitialContext();
-			DataSource ds = (DataSource) cont.lookup("jdbc/applier");
-			
-			Connection conn = ds.getConnection();
+			Connection conn = getConnection();
 			
 			PreparedStatement ps = conn.prepareStatement("SELECT * from appjob where comid = ?");
 			ps.setInt(1, company.getId());
@@ -454,10 +427,8 @@ public class JNDIAppDirDAO implements IAppDirDAO {
 	public Job getJobById(int id) throws DBAccessException {
 		Job job = null;
 		try{
-			InitialContext cont = new InitialContext();
-			DataSource ds = (DataSource) cont.lookup("jdbc/applier");
 			
-			Connection conn = ds.getConnection();
+			Connection conn = getConnection();
 			
 			PreparedStatement ps = conn.prepareStatement("Select * from appjob where jobid = ?");
 			
@@ -477,6 +448,16 @@ public class JNDIAppDirDAO implements IAppDirDAO {
 		}
 		
 		return job;
+	}
+	
+	
+	private Connection getConnection() throws NamingException, SQLException{
+		InitialContext cont = new InitialContext();
+		DataSource ds = (DataSource) cont.lookup("jdbc/applier");
+		
+		Connection conn = ds.getConnection();
+		
+		return conn;
 	}
 
 }
